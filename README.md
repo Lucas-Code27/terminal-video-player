@@ -11,3 +11,8 @@
 - Add support for jpeg and webp
 - Color
 - Audio
+
+## Dependencies
+- pillow
+- opencv-python
+- tqdm
