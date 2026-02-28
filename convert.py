@@ -1,6 +1,7 @@
 from PIL import Image
 from pathlib import Path
 from tqdm import tqdm
+import termcolor
 import json
 
 import vid2img
@@ -37,13 +38,16 @@ print("CONVERTING TO TEXT FILES")
 
 for image_path in tqdm(frame_filenames, "Converting"):
     picture = Image.open(image_path)
+    gs_picture = picture
 
-    picture = picture.convert("L")
+    picture = picture.convert("RGB")
+    gs_picture = gs_picture.convert("L")
 
     width, height = picture.size
 
     # Load the pixel data for efficient access
     pixels = picture.load()
+    lum_pixels = gs_picture.load()
 
     image_text_data = []
 
@@ -56,16 +60,18 @@ for image_path in tqdm(frame_filenames, "Converting"):
             if (quantization_level > 1):
                 if x % quantization_level != 0: continue
 
-            value = pixels[x, y]
+            red, green, blue = pixels[x, y]
+            value = lum_pixels[x, y]
+            color = (red, green, blue)
 
             if value > 180:
-                line += '█'
+                line += termcolor.colored('█', color)
             elif value > 128:
-                line += '▓'
+                line += termcolor.colored('▓', color)
             elif value > 64:
-                line += '▒'
+                line += termcolor.colored('▒', color)
             elif value > 32:
-                line += '░'
+                line += termcolor.colored('░', color)
             else:
                 line += ' '
         image_text_data.append(line)
