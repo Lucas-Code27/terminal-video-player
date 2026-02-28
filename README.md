@@ -16,3 +16,4 @@
 - pillow
 - opencv-python
 - tqdm
+- termcolor
