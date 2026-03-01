@@ -20,22 +20,24 @@ def frame_generator(path):
     cap.release()
 
 def produce_frames(frame_buffer):
-    frame_gen = frame_generator("video/video.mp4")
+    frame_gen = frame_generator("video/school commercial.mp4")
     image_frame_buffer = queue.Queue(maxsize=frame_buffer.maxsize)
 
-    sleep_time = time.time()
+    image_sleep_time = time.time()
 
     conf = config.get_config()
     quantization_level = conf["quantization_level"]
     
     while True:
         if image_frame_buffer.full():
-            if time.time() - sleep_time > MAX_TIMEOUT / 1000:
+            if time.time() - image_sleep_time > MAX_TIMEOUT / 1000:
                 raise Exception("YOU'RE TAKING TOO LONG")
 
             time.sleep(TIMEOUT / 1000)
         
-        sleep_time = time.time()
+        image_sleep_time = time.time()
+
+        start_time = time.time()
 
         try:
             file_frame = next(frame_gen)
@@ -87,3 +89,6 @@ def produce_frames(frame_buffer):
                 
             image_text_data += line + "\n"
         frame_buffer.put(image_text_data)
+        end_time = time.time()
+
+        print("time to buffer frame: ", end_time - start_time)
