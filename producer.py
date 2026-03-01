@@ -1,4 +1,5 @@
 from PIL import Image
+import numpy
 import io
 import termcolor
 import queue
@@ -50,41 +51,39 @@ def produce_frames(frame_buffer):
         frame_bytes = io.BytesIO(frame)
 
         picture = Image.open(frame_bytes)
-        gs_picture = picture
-
         picture = picture.convert("RGB")
-        gs_picture = gs_picture.convert("L")
 
         width, height = picture.size
 
-        # Load the pixel data for efficient access
-        pixels = picture.load()
-        lum_pixels = gs_picture.load()
+        CHAR_SIZE_X = 1
+        CHAR_SIZE_Y = 2
+
+        char_x = CHAR_SIZE_X * quantization_level
+        char_y = CHAR_SIZE_Y * quantization_level
+
+        pixels_grid = numpy.array(picture)
 
         image_text_data = ""
 
         # Loop over all pixels
-        for y in range(height):
-            if y % (quantization_level * 2) != 0: continue
+        for y in range(0, height, char_y):
             line = ""
 
-            for x in range(width):
-                if (quantization_level > 1):
-                    if x % quantization_level != 0: continue
+            for x in range(0, width, char_x):
+                pixel_chunk = pixels_grid[y : y + char_y, x : x + char_x]
 
-                red, green, blue = pixels[x, y]
-                value = lum_pixels[x, y]
+                if pixel_chunk.size == 0:
+                    continue
+
+                avg_color = numpy.mean(pixel_chunk, axis=(0, 1))
+
+                if numpy.isnan(avg_color).any():
+                    continue
+
+                red, green, blue = numpy.round(avg_color).astype(numpy.ubyte)
                 color = (red, green, blue)
 
-                if value > 180:
-                    line += termcolor.colored('█', color)
-                elif value > 128:
-                    line += termcolor.colored('▓', color)
-                elif value > 64:
-                    line += termcolor.colored('▒', color)
-                elif value > 32:
-                    line += termcolor.colored('░', color)
-                else:
-                    line += ' '
+                line += termcolor.colored('█', color)
+                
             image_text_data += line + "\n"
         frame_buffer.put(image_text_data)
