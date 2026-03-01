@@ -20,7 +20,9 @@ def frame_generator(path):
     cap.release()
 
 def produce_frames(frame_buffer):
-    frame_gen = frame_generator("video/school commercial.mp4")
+    performance_times = {}
+
+    frame_gen = frame_generator("video/video.mp4")
     image_frame_buffer = queue.Queue(maxsize=frame_buffer.maxsize)
 
     image_sleep_time = time.time()
@@ -44,6 +46,11 @@ def produce_frames(frame_buffer):
         except StopIteration:
             return
 
+        end_time = time.time()
+        performance_times["get_image"] = end_time - start_time
+
+        start_time = time.time()
+
         encode_success, image = cv2.imencode(".png", file_frame)
 
         if not encode_success:
@@ -55,8 +62,6 @@ def produce_frames(frame_buffer):
         picture = Image.open(frame_bytes)
         picture = picture.convert("RGB")
 
-        width, height = picture.size
-
         CHAR_SIZE_X = 1
         CHAR_SIZE_Y = 2
 
@@ -65,7 +70,16 @@ def produce_frames(frame_buffer):
 
         pixels_grid = numpy.array(picture)
 
+        height = pixels_grid.shape[0]
+        width = pixels_grid.shape[1]
+
         image_text_data = ""
+
+        end_time = time.time()
+
+        performance_times["prepare_image"] = end_time - start_time
+
+        start_time = time.time()
 
         # Loop over all pixels
         for y in range(0, height, char_y):
@@ -91,4 +105,6 @@ def produce_frames(frame_buffer):
         frame_buffer.put(image_text_data)
         end_time = time.time()
 
-        print("time to buffer frame: ", end_time - start_time)
+        performance_times["convert_image_to_text"] = end_time - start_time
+
+        print("Buffer Performance: ", performance_times)
