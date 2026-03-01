@@ -1,10 +1,4 @@
 import logging
-from PIL import Image
-from pathlib import Path
-from tqdm import tqdm
-import termcolor
-import json
-import io
 import queue
 import threading
 
