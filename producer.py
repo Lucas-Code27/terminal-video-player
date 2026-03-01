@@ -20,13 +20,12 @@ def frame_generator(path):
 
 def produce_frames(frame_buffer):
     frame_gen = frame_generator("video/video.mp4")
+    image_frame_buffer = queue.Queue(maxsize=frame_buffer.maxsize)
 
     sleep_time = time.time()
 
     conf = config.get_config()
     quantization_level = conf["quantization_level"]
-
-    image_frame_buffer = queue.Queue(maxsize=frame_buffer.maxsize)
     
     while True:
         if image_frame_buffer.full():

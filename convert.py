@@ -11,7 +11,6 @@ def main():
     frame_buffer = queue.Queue(maxsize=BUFFER_SIZE)
 
     producer_thread = threading.Thread(target=producer.produce_frames, args=[frame_buffer])
-
     watch_thread = threading.Thread(target=watch.watch_video, args=[frame_buffer])
 
     producer_thread.start()
