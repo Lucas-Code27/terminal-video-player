@@ -22,6 +22,9 @@ def watch_video(frame_buffer):
             frame = frame_buffer.get(timeout=1)
         except queue.Empty:
             return
+        except Exception as e:
+            print(e)
+            return
 
         sys.stdout.write("\033[0;0H")
         sys.stdout.write(frame)
