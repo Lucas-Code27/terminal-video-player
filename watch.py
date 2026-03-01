@@ -4,10 +4,8 @@ import time
 import queue
 
 def watch_video(frame_buffer):
-    FPS = 30
-    FRAME_DELAY = 1 / FPS
-
-    next_frame_time = time.perf_counter()
+    FPS = 12
+    FRAME_DELAY = 1.0 / FPS
 
     print("Loading...")
 
@@ -26,14 +24,20 @@ def watch_video(frame_buffer):
             print(e)
             return
 
+        render_start_time = time.time()
+
         sys.stdout.write("\033[0;0H")
         sys.stdout.write(frame)
         sys.stdout.flush()
 
-        next_frame_time += FRAME_DELAY
-        sleep_time = next_frame_time - time.perf_counter()
+        render_end_time = time.time()
+        render_time = render_end_time - render_start_time
+
+        print("Time to render frame: ", render_time)
+
+        sleep_time = max(0, FRAME_DELAY - render_time)
         if sleep_time > 0:
-            time.sleep(FRAME_DELAY)
+            time.sleep(sleep_time)
 
     #print("\033[?25h")
     #os.system("clear")
