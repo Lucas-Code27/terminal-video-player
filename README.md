@@ -2,18 +2,15 @@
 #### A simple video player for the terminal
 
 ## Features
-- Video (.mp4) to Image Squence (.png) Converter
-- Image Sequence (.png) to text files Converter
-- python script to watch text file sequence in the terminal
+- One file to handle everything
+- Multi-Threaded buffering and rendering
 - Color
 
 ## Planned Features
 - Command line arguments (or a gui) for settings before starting
-- Add support for jpeg and webp
 - Audio
 
 ## Dependencies
 - pillow
 - opencv-python
-- tqdm
 - termcolor
