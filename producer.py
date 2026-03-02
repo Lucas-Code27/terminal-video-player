@@ -17,10 +17,10 @@ def frame_generator(path):
         yield frame
     cap.release()
 
-def produce_frames(frame_buffer):
+def produce_frames(frame_buffer, video_path):
     #performance_times = {}
 
-    frame_gen = frame_generator("video/video.mp4")
+    frame_gen = frame_generator(video_path)
     image_frame_buffer = queue.Queue(maxsize=frame_buffer.maxsize)
 
     image_sleep_time = time.time()

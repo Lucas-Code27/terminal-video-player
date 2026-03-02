@@ -1,0 +1,46 @@
+from pathlib import Path
+import cv2
+import logging
+import queue
+import threading
+import sys
+
+import watch
+import producer
+
+BUFFER_SIZE = 100
+
+def main():
+    if ("convert" in sys.argv[0] and not len(sys.argv) >= 2) or not len(sys.argv) >= 2:
+        print(len(sys.argv))
+        print("You need to provide a path to the video file you want to play.")
+        return
+
+    video_path = None
+    if Path(sys.argv[1]).is_file():
+        video_path = sys.argv[1]
+
+    if video_path == None:
+        print("File not found")
+        return
+
+    video = cv2.VideoCapture(video_path)
+    video_fps = video.get(cv2.CAP_PROP_FPS)
+    video.release()
+
+    frame_buffer = queue.Queue(maxsize=BUFFER_SIZE)
+
+    producer_thread = threading.Thread(target=producer.produce_frames, args=[frame_buffer, video_path])
+    watch_thread = threading.Thread(target=watch.watch_video, args=[frame_buffer, video_fps])
+    
+    producer_thread.start()
+    watch_thread.start()
+
+    producer_thread.join()
+    watch_thread.join()
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as e:
+        logging.error("Hello my name is Error", exc_info=e, stack_info=True)
