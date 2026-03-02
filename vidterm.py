@@ -11,17 +11,24 @@ import producer
 BUFFER_SIZE = 100
 
 def main():
-    if ("convert" in sys.argv[0] and not len(sys.argv) >= 2) or not len(sys.argv) >= 2:
-        print(len(sys.argv))
-        print("You need to provide a path to the video file you want to play.")
-        return
-
+    file_found = False
     video_path = None
-    if Path(sys.argv[1]).is_file():
-        video_path = sys.argv[1]
 
-    if video_path == None:
-        print("File not found")
+    for i in range(len(sys.argv) - 1):
+        if sys.argv[i] == "--file":
+            file_found = True
+
+            if Path(sys.argv[i + 1]).is_file():
+                video_path = sys.argv[i + 1]
+
+            if video_path == None:
+                print(len(sys.argv))
+                print(sys.argv[i + 1])
+                print("File not found")
+                return
+    
+    if not file_found:
+        print("You need to provide a path to the video file you want to play.")
         return
 
     video = cv2.VideoCapture(video_path)
