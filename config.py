@@ -10,10 +10,12 @@ def load_config():
             data = json.load(f)
         
             new_config["quantization_level"] = data["quantization_level"]
+            new_config["black_point"] = data["black_point"]
     except Exception as e:
         print(f"Config loading had an error! {e}")
 
-        new_config["quantization_level"] = 8
+        new_config["quantization_level"] = 12
+        new_config["black_point"] = 16
     
     return new_config
 

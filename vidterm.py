@@ -34,6 +34,11 @@ def main():
         return
 
     video = cv2.VideoCapture(video_path)
+
+    if not video.isOpened():
+        print("File given is not a valid video and could not be openned by OpenCV2 please try again or use a different file")
+        return
+
     video_fps = video.get(cv2.CAP_PROP_FPS)
     video.release()
 

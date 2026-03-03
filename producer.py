@@ -27,6 +27,7 @@ def produce_frames(frame_buffer, video_path):
 
     conf = config.get_config()
     quantization_level = conf["quantization_level"]
+    black_point = conf["black_point"]
     
     while True:
         if image_frame_buffer.full():
@@ -92,8 +93,12 @@ def produce_frames(frame_buffer, video_path):
 
             for x in range(blocks_x):
                 red, green, blue = numpy.round(avg_color[y, x]).astype(numpy.uint8)
+                color = (red, green, blue)
 
-                chars.append(termcolor.colored('█', (red, green, blue)))
+                if red > black_point or green > black_point or blue > black_point:
+                    chars.append(termcolor.colored('█', color))
+                else:
+                    chars.append(' ')
 
             lines.append("".join(chars) + "\n")
         

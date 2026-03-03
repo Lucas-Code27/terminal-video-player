@@ -1,3 +1,4 @@
 {
-    "quantization_level": 1
+    "quantization_level": 1,
+    "black_point": 0
 }
