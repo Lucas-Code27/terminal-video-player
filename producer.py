@@ -1,12 +1,10 @@
 import numpy
+import numpy.core.defchararray
 import queue
 import time
 import cv2
 
 import config
-
-TIMEOUT = 15
-MAX_TIMEOUT = 2000
 
 def frame_generator(path):
     cap = cv2.VideoCapture(filename=path)
@@ -18,6 +16,9 @@ def frame_generator(path):
 
 def produce_frames(frame_buffer, video_path):
     #performance_times = {}
+
+    TIMEOUT = 15
+    MAX_TIMEOUT = 2000
 
     CHAR_SIZE_X = 1
     CHAR_SIZE_Y = 2
@@ -82,22 +83,28 @@ def produce_frames(frame_buffer, video_path):
 
         #start_time = time.time()
 
-        # Loop over all blocks
-        lines = []
+        black_point_mask = numpy.any(avg_color > black_point, axis=-1)
 
-        for y in range(blocks_y):
-            chars = []
+        red = avg_color[:, :, 0]
+        green = avg_color[:, :, 1]
+        blue = avg_color[:, :, 2]
 
-            for x in range(blocks_x):
-                color = avg_color[y, x]
+        chars = numpy.core.defchararray.add(
+            numpy.core.defchararray.add(
+                numpy.core.defchararray.add(
+                    numpy.core.defchararray.add("\033[38;2;", red.astype(str)),
+                    numpy.core.defchararray.add(";", green.astype(str))
+                ),
+                numpy.core.defchararray.add(";", blue.astype(str))
+            ),
+            "m█"
+        )
 
-                if color[0] > black_point or color[1] > black_point or color[2] > black_point:
-                    chars.append(f"\033[38;2;{color[0]};{color[1]};{color[2]}m█")
-                else:
-                    chars.append(' ')
+        chars_array = numpy.where(black_point_mask, chars, ' ')
 
-            lines.append("".join(chars) + "\n")
-        
+        lines_array = numpy.core.defchararray.add(chars_array, "")
+        lines = ["".join(row) + "\n" for row in lines_array]
+
         frame_buffer.put("".join(lines))
         #end_time = time.time()
 
