@@ -1,5 +1,4 @@
 import numpy
-import termcolor
 import queue
 import time
 import cv2
@@ -8,8 +7,6 @@ import config
 
 TIMEOUT = 15
 MAX_TIMEOUT = 2000
-
-RESET = "\033[0m"
 
 def frame_generator(path):
     cap = cv2.VideoCapture(filename=path)
@@ -22,6 +19,9 @@ def frame_generator(path):
 def produce_frames(frame_buffer, video_path):
     #performance_times = {}
 
+    CHAR_SIZE_X = 1
+    CHAR_SIZE_Y = 2
+
     frame_gen = frame_generator(video_path)
     image_frame_buffer = queue.Queue(maxsize=frame_buffer.maxsize)
 
@@ -30,6 +30,9 @@ def produce_frames(frame_buffer, video_path):
     conf = config.get_config()
     quantization_level = conf["quantization_level"]
     black_point = conf["black_point"]
+
+    char_x = CHAR_SIZE_X * quantization_level
+    char_y = CHAR_SIZE_Y * quantization_level
     
     while True:
         if image_frame_buffer.full():
@@ -52,12 +55,6 @@ def produce_frames(frame_buffer, video_path):
 
         #start_time = time.time()
 
-        CHAR_SIZE_X = 1
-        CHAR_SIZE_Y = 2
-
-        char_x = CHAR_SIZE_X * quantization_level
-        char_y = CHAR_SIZE_Y * quantization_level
-
         pixels_grid = cv2.cvtColor(file_frame, cv2.COLOR_BGR2RGB)
 
         height = pixels_grid.shape[0]
@@ -77,9 +74,7 @@ def produce_frames(frame_buffer, video_path):
             3
         )
 
-        avg_color = numpy.mean(reshaped, axis=(1, 3))
-
-        image_text_data = ""
+        avg_color = numpy.mean(reshaped, axis=(1, 3)).astype("uint8")
 
         #end_time = time.time()
 
@@ -94,19 +89,16 @@ def produce_frames(frame_buffer, video_path):
             chars = []
 
             for x in range(blocks_x):
-                red, green, blue = numpy.round(avg_color[y, x]).astype(numpy.uint8)
-                color = (red, green, blue)
+                color = avg_color[y, x]
 
-                if red > black_point or green > black_point or blue > black_point:
-                    text = termcolor.colored('█', color)
-                    chars.append(text[:-len(RESET)])
+                if color[0] > black_point or color[1] > black_point or color[2] > black_point:
+                    chars.append(f"\033[38;2;{color[0]};{color[1]};{color[2]}m█")
                 else:
                     chars.append(' ')
 
             lines.append("".join(chars) + "\n")
         
-        image_text_data += "".join(lines)
-        frame_buffer.put(image_text_data)
+        frame_buffer.put("".join(lines))
         #end_time = time.time()
 
         #performance_times["convert_image_to_text"] = end_time - start_time
