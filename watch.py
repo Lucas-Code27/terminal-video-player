@@ -11,6 +11,8 @@ def watch_video(frame_buffer, video_fps, frame_count, preload_buffer_amount, spe
     ansi_escape = re.compile(r'\033\[[0-9;]*m')
     last_width = 0
 
+    played_frames = 0
+
     print("Loading...")
 
     if preload_buffer_amount > frame_count:
@@ -53,10 +55,28 @@ def watch_video(frame_buffer, video_fps, frame_count, preload_buffer_amount, spe
         sys.stdout.write(padded_frame + "\033[0m")
         sys.stdout.flush()
 
+        played_frames += 1
+
         render_end_time = time.time()
         render_time = render_end_time - render_start_time
 
-        print("\n" + (" " * padding) + f"Buffer: {frame_buffer.qsize()}/{frame_buffer.maxsize}      ")
+        played_ratio = played_frames / frame_count
+        buffered_ratio = (played_frames + frame_buffer.qsize()) / frame_count
+
+        played_chars = int(played_ratio * frame_width)
+        buffer_chars = int(buffered_ratio * frame_width)
+
+        print("\n\n" + (" " * padding), end="")
+        for i in range(frame_width):
+            if i < played_chars:
+                print("█", end="")
+            elif i < buffer_chars:
+                print("▒", end="")
+            else:
+                print("░", end="")
+        
+
+        #print("\n" + (" " * padding) + f"Buffer: {frame_buffer.qsize()}/{frame_buffer.maxsize}      ")
         #print("Time to render frame: ", render_time)
 
         sleep_time = max(0, FRAME_DELAY - render_time)
