@@ -9,6 +9,7 @@ def watch_video(frame_buffer, video_fps, frame_count, preload_buffer_amount, spe
     FRAME_DELAY = 1.0 / adjusted_fps
 
     ansi_escape = re.compile(r'\033\[[0-9;]*m')
+    last_width = 0
 
     print("Loading...")
 
@@ -20,7 +21,6 @@ def watch_video(frame_buffer, video_fps, frame_count, preload_buffer_amount, spe
             time.sleep(10 / 1000)
 
     #print("\033[?25l")
-    os.system("clear")
 
     while True:
         try:
@@ -33,6 +33,9 @@ def watch_video(frame_buffer, video_fps, frame_count, preload_buffer_amount, spe
 
         try:
             term_width = os.get_terminal_size().columns
+            if term_width != last_width:
+                os.system("clear")
+                last_width = term_width
         except:
             term_width = 80
 
@@ -53,7 +56,7 @@ def watch_video(frame_buffer, video_fps, frame_count, preload_buffer_amount, spe
         render_end_time = time.time()
         render_time = render_end_time - render_start_time
 
-        print(f"\nBuffer: {frame_buffer.qsize()}/{frame_buffer.maxsize}      ")
+        print("\n" + (" " * padding) + f"Buffer: {frame_buffer.qsize()}/{frame_buffer.maxsize}      ")
         #print("Time to render frame: ", render_time)
 
         sleep_time = max(0, FRAME_DELAY - render_time)
