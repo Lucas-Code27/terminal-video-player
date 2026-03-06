@@ -58,11 +58,16 @@ def main():
     producer_thread = threading.Thread(target=producer.produce_frames, args=[frame_buffer, video_path], daemon=True)
     watch_thread = threading.Thread(target=watch.watch_video, args=[frame_buffer, video_fps, frame_count, preload_buffer_amount, speed_scale], daemon=True)
     
-    producer_thread.start()
-    watch_thread.start()
+    try:
+        print("\033[?25l")
+        producer_thread.start()
+        watch_thread.start()
 
-    producer_thread.join()
-    watch_thread.join()
+        producer_thread.join()
+        watch_thread.join()
+    except KeyboardInterrupt:
+        print("\033[?25h")
+        exit()
 
 if __name__ == "__main__":
     try:

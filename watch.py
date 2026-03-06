@@ -74,7 +74,7 @@ def watch_video(frame_buffer, video_fps, frame_count, preload_buffer_amount, spe
                 print("▒", end="")
             else:
                 print("░", end="")
-        
+        print("\n")
 
         #print("\n" + (" " * padding) + f"Buffer: {frame_buffer.qsize()}/{frame_buffer.maxsize}      ")
         #print("Time to render frame: ", render_time)
