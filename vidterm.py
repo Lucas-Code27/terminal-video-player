@@ -68,6 +68,8 @@ def main():
     except KeyboardInterrupt:
         print("\033[?25h")
         exit()
+    finally:
+        print("\033[?25h")
 
 if __name__ == "__main__":
     try:
