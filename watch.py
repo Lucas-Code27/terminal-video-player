@@ -53,7 +53,6 @@ def watch_video(frame_buffer, video_fps, frame_count, preload_buffer_amount, spe
 
         sys.stdout.write(f"\033[0;0H")
         sys.stdout.write(padded_frame + "\033[0m")
-        sys.stdout.flush()
 
         played_frames += 1
 
@@ -66,15 +65,17 @@ def watch_video(frame_buffer, video_fps, frame_count, preload_buffer_amount, spe
         played_chars = int(played_ratio * frame_width)
         buffer_chars = int(buffered_ratio * frame_width)
 
-        print("\n\n" + (" " * padding), end="")
+        sys.stdout.write("\n\n" + (" " * padding))
         for i in range(frame_width):
             if i < played_chars:
-                print("█", end="")
+                sys.stdout.write("█")
             elif i < buffer_chars:
-                print("▒", end="")
+                sys.stdout.write("▒")
             else:
-                print("░", end="")
-        print("\n")
+                sys.stdout.write("░")
+        sys.stdout.write("\n")
+
+        sys.stdout.flush()
 
         #print("\n" + (" " * padding) + f"Buffer: {frame_buffer.qsize()}/{frame_buffer.maxsize}      ")
         #print("Time to render frame: ", render_time)

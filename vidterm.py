@@ -52,7 +52,7 @@ def main():
 
     conf = config.get_config()
 
-    frame_buffer = queue.Queue(maxsize=conf["buffer_size"])
+    frame_buffer: queue.Queue[str] = queue.Queue(maxsize=conf["buffer_size"])
     preload_buffer_amount = conf["pre_load_buffer"]
 
     producer_thread = threading.Thread(target=producer.produce_frames, args=[frame_buffer, video_path], daemon=True)

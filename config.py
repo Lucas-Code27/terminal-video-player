@@ -3,7 +3,7 @@ import json
 config_ref = None
 
 def load_config():
-    new_config = {}
+    new_config: dict[str, int] = {}
 
     try:
         with open('config/config.json', 'r') as f:
