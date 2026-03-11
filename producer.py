@@ -15,10 +15,12 @@ def frame_generator(path):
     cap.release()
 
 def produce_frames(frame_buffer, video_path):
-    #performance_times = {}
+    performance_times = {}
 
     TIMEOUT = 15
     MAX_TIMEOUT = 2000
+
+    DEBUG_ROUND_DIGITS = 3
 
     CHAR_SIZE_X = 1
     CHAR_SIZE_Y = 2
@@ -43,17 +45,17 @@ def produce_frames(frame_buffer, video_path):
         
         image_sleep_time = time.time()
 
-        #start_time = time.time()
+        start_time = time.time()
 
         try:
             file_frame = next(frame_gen)
         except StopIteration:
             return
 
-        #end_time = time.time()
-        #performance_times["get_image"] = end_time - start_time
+        end_time = time.time()
+        performance_times["get_image"] = round(end_time - start_time, DEBUG_ROUND_DIGITS)
 
-        #start_time = time.time()
+        start_time = time.time()
 
         pixels_grid = cv2.cvtColor(file_frame, cv2.COLOR_BGR2RGB)
 
@@ -80,12 +82,6 @@ def produce_frames(frame_buffer, video_path):
         avg_color = numpy.mean(top_half, axis=(1, 3)).astype("uint8")
         bottom_avg_color = numpy.mean(bottom_half, axis=(1, 3)).astype("uint8")
 
-        #end_time = time.time()
-
-        #performance_times["prepare_image"] = end_time - start_time
-
-        #start_time = time.time()
-
         red = avg_color[:, :, 0]
         green = avg_color[:, :, 1]
         blue = avg_color[:, :, 2]
@@ -104,6 +100,12 @@ def produce_frames(frame_buffer, video_path):
         bg_prev[:, 0] = 255
 
         change_mask = numpy.any(fg != fg_prev, axis=2) | numpy.any(bg != bg_prev, axis=2)
+
+        end_time = time.time()
+
+        performance_times["prepare_image"] = round(end_time - start_time, DEBUG_ROUND_DIGITS)
+
+        start_time = time.time()
 
         colors = numpy.core.defchararray.add(
             numpy.core.defchararray.add(
@@ -132,12 +134,13 @@ def produce_frames(frame_buffer, video_path):
 
         chars = numpy.where(change_mask, numpy.core.defchararray.add(colors, chars), chars)
 
+        end_time = time.time()
+
+        performance_times["convert_image_to_text"] = round(end_time - start_time, DEBUG_ROUND_DIGITS)
+        performance_times["total"] = round(performance_times["convert_image_to_text"] + performance_times["get_image"] + performance_times["prepare_image"], DEBUG_ROUND_DIGITS)
+
         lines_array = numpy.core.defchararray.add(chars, "")
         lines = ["".join(row) + "\n" for row in lines_array]
+        lines.append(f"Buffer Times: {performance_times}")
 
         frame_buffer.put("".join(lines))
-        #end_time = time.time()
-
-        #performance_times["convert_image_to_text"] = end_time - start_time
-
-        #print("Buffer Performance: ", performance_times)

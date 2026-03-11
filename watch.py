@@ -75,12 +75,12 @@ def watch_video(frame_buffer, video_fps, frame_count, preload_buffer_amount, spe
                 sys.stdout.write("░")
         sys.stdout.write("\n")
 
-        #sys.stdout.write(f"{sys.getsizeof(frame)}\n") # frame data size check
+        sys.stdout.write("\n")
+        sys.stdout.write(f"Frame render time: {render_time:.6f}" + (" " * 12) + "\n")
+        sys.stdout.write(f"Frame Size: {round(sys.getsizeof(frame)/1000, 3)} kilobytes" + (" " * 12) + "\n")
+        sys.stdout.write(f"Buffer: {frame_buffer.qsize()}/{frame_buffer.maxsize}" + (" " * 12) + "\n")
 
         sys.stdout.flush()
-
-        #print("\n" + (" " * padding) + f"Buffer: {frame_buffer.qsize()}/{frame_buffer.maxsize}      ")
-        #print("Time to render frame: ", render_time)
 
         sleep_time = max(0, FRAME_DELAY - render_time)
         if sleep_time > 0:
