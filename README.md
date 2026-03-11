@@ -9,6 +9,7 @@
 ## Planned Features
 - Audio
 - Playback controls (Pause/Resume)
+- More Color/Render Modes (ANSI 16 colors and Kitty image rendering)
 
 ## Dependencies
 - numpy
