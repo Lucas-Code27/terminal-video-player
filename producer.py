@@ -1,8 +1,9 @@
-from numpy import any, where, mean, stack, roll, full
+from numpy import any, where, set_printoptions, roll, full
 from numpy.core import defchararray
 from queue import Queue
 from time import time, sleep
 from cv2 import VideoCapture, cvtColor, COLOR_BGR2RGB
+from sys import maxsize
 
 from config import get_config
 
@@ -15,6 +16,7 @@ def frame_generator(path):
     cap.release()
 
 def produce_frames(frame_buffer, video_path):
+    set_printoptions(threshold=maxsize)
     performance_times = {}
 
     TIMEOUT = 15
@@ -35,6 +37,8 @@ def produce_frames(frame_buffer, video_path):
 
     char_x = CHAR_SIZE_X * quantization_level
     char_y = CHAR_SIZE_Y * quantization_level
+
+    one = False
     
     while True:
         if image_frame_buffer.full():
@@ -57,15 +61,13 @@ def produce_frames(frame_buffer, video_path):
 
         start_time = time()
 
-        pixels_grid = cvtColor(file_frame, COLOR_BGR2RGB)
-
-        height = pixels_grid.shape[0]
-        width = pixels_grid.shape[1]
+        height = file_frame.shape[0]
+        width = file_frame.shape[1]
 
         h2 = (height // char_y) * char_y
         w2 = (width // char_x) * char_x
 
-        cropped = pixels_grid[:h2, :w2]
+        cropped = file_frame[:h2, :w2]
 
         blocks_y = h2 // char_y
         blocks_x = w2 // char_x
@@ -76,22 +78,13 @@ def produce_frames(frame_buffer, video_path):
             3
         )
 
-        top_half = reshaped[:, :char_y // 2, :, :, :]
-        bottom_half = reshaped[:, char_y // 2:, :, :, :]
+        half = char_y // 2
 
-        avg_color = mean(top_half, axis=(1, 3)).astype("uint8")
-        bottom_avg_color = mean(bottom_half, axis=(1, 3)).astype("uint8")
+        top_half = reshaped[:, :half].mean(axis=(1, 3)).astype("uint8")
+        bottom_half = reshaped[:, half:].mean(axis=(1, 3)).astype("uint8")
 
-        red = avg_color[:, :, 0]
-        green = avg_color[:, :, 1]
-        blue = avg_color[:, :, 2]
-
-        bottom_red = bottom_avg_color[:, :, 0]
-        bottom_green = bottom_avg_color[:, :, 1]
-        bottom_blue = bottom_avg_color[:, :, 2]
-
-        fg = stack((red, green, blue), axis=2)
-        bg = stack((bottom_red, bottom_green, bottom_blue), axis=2)
+        fg = top_half
+        bg = bottom_half
 
         fg_prev = roll(fg, 1, axis=1)
         bg_prev = roll(bg, 1, axis=1)
@@ -99,7 +92,7 @@ def produce_frames(frame_buffer, video_path):
         fg_prev[:, 0] = 255
         bg_prev[:, 0] = 0
 
-        change_mask = any(fg != fg_prev, axis=2) | any(bg != bg_prev, axis=2)
+        change_mask = any((fg != fg_prev) | (bg != bg_prev), axis=2)
 
         end_time = time()
 
@@ -112,25 +105,25 @@ def produce_frames(frame_buffer, video_path):
                 defchararray.add(
                     defchararray.add(
                         defchararray.add(
-                            defchararray.add("\033[38;2;", red.astype(str)),
-                            defchararray.add(";", green.astype(str))
+                            defchararray.add("\033[38;2;", fg[:, :, 2].astype(str)),
+                            defchararray.add(";", fg[:, :, 1].astype(str))
                         ),
-                        defchararray.add(";", blue.astype(str))
+                        defchararray.add(";", fg[:, :, 0].astype(str))
                     ),
                     "m"
                 ),
                 defchararray.add(
                     defchararray.add(
-                        defchararray.add("\033[48;2;", bottom_red.astype(str)),
-                        defchararray.add(";", bottom_green.astype(str))
+                        defchararray.add("\033[48;2;", bg[:, :, 2].astype(str)),
+                        defchararray.add(";", bg[:, :, 1].astype(str))
                     ),
-                    defchararray.add(";", bottom_blue.astype(str))
+                    defchararray.add(";", bg[:, :, 0].astype(str))
                 )
             ),
             "m"
         )
 
-        chars = full(red.shape, "▀", dtype="<U32")
+        chars = full(fg[:, :, 2].shape, "▀", dtype="<U32")
 
         chars = where(change_mask, defchararray.add(colors, chars), chars)
 
