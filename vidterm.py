@@ -16,7 +16,7 @@ def main():
     debug = False
 
     for i in range(len(argv)):
-        if argv[i] == "--file":
+        if argv[i] == "--path":
             file_found = True
 
             if Path(argv[i + 1]).is_file():

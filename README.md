@@ -23,7 +23,7 @@
 - Run the vidterm.py script with the required arguments
 
 ## How to run
-`<Virtual envirnment python executable> <path to vidterm.py> --file <video file>`
+`<Virtual envirnment python executable> <path to vidterm.py> --path <video file>`
 
 Optional Arguments:
 - `--speed <int or float value above 0>` Changes the video playback speed
