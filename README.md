@@ -14,7 +14,6 @@
 ## Dependencies
 - numpy
 - opencv-python
-- termcolor
 
 # How to use
 
