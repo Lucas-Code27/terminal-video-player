@@ -97,7 +97,7 @@ def produce_frames(frame_buffer, video_path):
         bg_prev = roll(bg, 1, axis=1)
 
         fg_prev[:, 0] = 255
-        bg_prev[:, 0] = 255
+        bg_prev[:, 0] = 0
 
         change_mask = any(fg != fg_prev, axis=2) | any(bg != bg_prev, axis=2)
 
