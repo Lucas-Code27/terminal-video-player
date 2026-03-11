@@ -1,34 +1,36 @@
-import numpy
-import numpy.core.defchararray
-import queue
-import time
-import cv2
+from numpy import any, where, roll, full
+from numpy.core import defchararray
+from queue import Queue
+from time import time, sleep
+from cv2 import VideoCapture
 
-import config
+from config import get_config
 
 def frame_generator(path):
-    cap = cv2.VideoCapture(filename=path)
+    cap = VideoCapture(filename=path)
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret: break
         yield frame
     cap.release()
 
-def produce_frames(frame_buffer, video_path):
-    #performance_times = {}
+def produce_frames(frame_buffer, video_path, debug):
+    performance_times = {}
 
     TIMEOUT = 15
     MAX_TIMEOUT = 2000
+
+    DEBUG_ROUND_DIGITS = 3
 
     CHAR_SIZE_X = 1
     CHAR_SIZE_Y = 2
 
     frame_gen = frame_generator(video_path)
-    image_frame_buffer = queue.Queue(maxsize=frame_buffer.maxsize)
+    image_frame_buffer = Queue(maxsize=frame_buffer.maxsize)
 
-    image_sleep_time = time.time()
+    image_sleep_time = time()
 
-    conf = config.get_config()
+    conf = get_config()
     quantization_level = conf["quantization_level"]
 
     char_x = CHAR_SIZE_X * quantization_level
@@ -36,34 +38,32 @@ def produce_frames(frame_buffer, video_path):
     
     while True:
         if image_frame_buffer.full():
-            if time.time() - image_sleep_time > MAX_TIMEOUT / 1000:
+            if time() - image_sleep_time > MAX_TIMEOUT / 1000:
                 raise Exception("YOU'RE TAKING TOO LONG")
 
-            time.sleep(TIMEOUT / 1000)
+            sleep(TIMEOUT / 1000)
         
-        image_sleep_time = time.time()
-
-        #start_time = time.time()
+        image_sleep_time = time()
+        
+        start_time = time()
 
         try:
             file_frame = next(frame_gen)
         except StopIteration:
             return
 
-        #end_time = time.time()
-        #performance_times["get_image"] = end_time - start_time
+        if debug:
+            end_time = time()
+            performance_times["get_image"] = round(end_time - start_time, DEBUG_ROUND_DIGITS)
+            start_time = time()
 
-        #start_time = time.time()
-
-        pixels_grid = cv2.cvtColor(file_frame, cv2.COLOR_BGR2RGB)
-
-        height = pixels_grid.shape[0]
-        width = pixels_grid.shape[1]
+        height = file_frame.shape[0]
+        width = file_frame.shape[1]
 
         h2 = (height // char_y) * char_y
         w2 = (width // char_x) * char_x
 
-        cropped = pixels_grid[:h2, :w2]
+        cropped = file_frame[:h2, :w2]
 
         blocks_y = h2 // char_y
         blocks_x = w2 // char_x
@@ -74,70 +74,64 @@ def produce_frames(frame_buffer, video_path):
             3
         )
 
-        top_half = reshaped[:, :char_y // 2, :, :, :]
-        bottom_half = reshaped[:, char_y // 2:, :, :, :]
+        half = char_y // 2
 
-        avg_color = numpy.mean(top_half, axis=(1, 3)).astype("uint8")
-        bottom_avg_color = numpy.mean(bottom_half, axis=(1, 3)).astype("uint8")
+        top_half = reshaped[:, :half].mean(axis=(1, 3)).astype("uint8")
+        bottom_half = reshaped[:, half:].mean(axis=(1, 3)).astype("uint8")
 
-        #end_time = time.time()
+        fg = top_half
+        bg = bottom_half
 
-        #performance_times["prepare_image"] = end_time - start_time
-
-        #start_time = time.time()
-
-        red = avg_color[:, :, 0]
-        green = avg_color[:, :, 1]
-        blue = avg_color[:, :, 2]
-
-        bottom_red = bottom_avg_color[:, :, 0]
-        bottom_green = bottom_avg_color[:, :, 1]
-        bottom_blue = bottom_avg_color[:, :, 2]
-
-        fg = numpy.stack((red, green, blue), axis=2)
-        bg = numpy.stack((bottom_red, bottom_green, bottom_blue), axis=2)
-
-        fg_prev = numpy.roll(fg, 1, axis=1)
-        bg_prev = numpy.roll(bg, 1, axis=1)
+        fg_prev = roll(fg, 1, axis=1)
+        bg_prev = roll(bg, 1, axis=1)
 
         fg_prev[:, 0] = 255
-        bg_prev[:, 0] = 255
+        bg_prev[:, 0] = 0
 
-        change_mask = numpy.any(fg != fg_prev, axis=2) | numpy.any(bg != bg_prev, axis=2)
+        change_mask = any((fg != fg_prev) | (bg != bg_prev), axis=2)
 
-        colors = numpy.core.defchararray.add(
-            numpy.core.defchararray.add(
-                numpy.core.defchararray.add(
-                    numpy.core.defchararray.add(
-                        numpy.core.defchararray.add(
-                            numpy.core.defchararray.add("\033[38;2;", red.astype(str)),
-                            numpy.core.defchararray.add(";", green.astype(str))
+        if debug:
+            end_time = time()
+            performance_times["prepare_image"] = round(end_time - start_time, DEBUG_ROUND_DIGITS)
+            start_time = time()
+
+        colors = defchararray.add(
+            defchararray.add(
+                defchararray.add(
+                    defchararray.add(
+                        defchararray.add(
+                            defchararray.add("\033[38;2;", fg[:, :, 2].astype(str)),
+                            defchararray.add(";", fg[:, :, 1].astype(str))
                         ),
-                        numpy.core.defchararray.add(";", blue.astype(str))
+                        defchararray.add(";", fg[:, :, 0].astype(str))
                     ),
                     "m"
                 ),
-                numpy.core.defchararray.add(
-                    numpy.core.defchararray.add(
-                        numpy.core.defchararray.add("\033[48;2;", bottom_red.astype(str)),
-                        numpy.core.defchararray.add(";", bottom_green.astype(str))
+                defchararray.add(
+                    defchararray.add(
+                        defchararray.add("\033[48;2;", bg[:, :, 2].astype(str)),
+                        defchararray.add(";", bg[:, :, 1].astype(str))
                     ),
-                    numpy.core.defchararray.add(";", bottom_blue.astype(str))
+                    defchararray.add(";", bg[:, :, 0].astype(str))
                 )
             ),
             "m"
         )
 
-        chars = numpy.full(red.shape, "▀", dtype="<U32")
+        chars = full(fg[:, :, 2].shape, "▀", dtype="<U32")
 
-        chars = numpy.where(change_mask, numpy.core.defchararray.add(colors, chars), chars)
+        chars = where(change_mask, defchararray.add(colors, chars), chars)
 
-        lines_array = numpy.core.defchararray.add(chars, "")
+        end_time = time()
+
+        if debug:
+            performance_times["convert_image_to_text"] = round(end_time - start_time, DEBUG_ROUND_DIGITS)
+            performance_times["total"] = round(performance_times["convert_image_to_text"] + performance_times["get_image"] + performance_times["prepare_image"], DEBUG_ROUND_DIGITS)
+
+        lines_array = defchararray.add(chars, "")
         lines = ["".join(row) + "\n" for row in lines_array]
 
+        if debug:
+            lines.append(f"Buffer Times: {performance_times}")
+
         frame_buffer.put("".join(lines))
-        #end_time = time.time()
-
-        #performance_times["convert_image_to_text"] = end_time - start_time
-
-        #print("Buffer Performance: ", performance_times)

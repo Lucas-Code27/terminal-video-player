@@ -27,4 +27,5 @@
 `<Virtual envirnment python executable> <path to vidterm.py> --file <video file>`
 
 Optional Arguments:
-- `--speed <int or float value above 0>`
+- `--speed <int or float value above 0>` Changes the video playback speed
+- `--debug` Displays debug information about renderer and buffer performance
