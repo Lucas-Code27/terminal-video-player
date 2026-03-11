@@ -14,7 +14,7 @@ def frame_generator(path):
         yield frame
     cap.release()
 
-def produce_frames(frame_buffer, video_path):
+def produce_frames(frame_buffer, video_path, debug):
     performance_times = {}
 
     TIMEOUT = 15
@@ -44,7 +44,7 @@ def produce_frames(frame_buffer, video_path):
             sleep(TIMEOUT / 1000)
         
         image_sleep_time = time()
-
+        
         start_time = time()
 
         try:
@@ -52,10 +52,10 @@ def produce_frames(frame_buffer, video_path):
         except StopIteration:
             return
 
-        end_time = time()
-        performance_times["get_image"] = round(end_time - start_time, DEBUG_ROUND_DIGITS)
-
-        start_time = time()
+        if debug:
+            end_time = time()
+            performance_times["get_image"] = round(end_time - start_time, DEBUG_ROUND_DIGITS)
+            start_time = time()
 
         height = file_frame.shape[0]
         width = file_frame.shape[1]
@@ -90,11 +90,10 @@ def produce_frames(frame_buffer, video_path):
 
         change_mask = any((fg != fg_prev) | (bg != bg_prev), axis=2)
 
-        end_time = time()
-
-        performance_times["prepare_image"] = round(end_time - start_time, DEBUG_ROUND_DIGITS)
-
-        start_time = time()
+        if debug:
+            end_time = time()
+            performance_times["prepare_image"] = round(end_time - start_time, DEBUG_ROUND_DIGITS)
+            start_time = time()
 
         colors = defchararray.add(
             defchararray.add(
@@ -125,11 +124,14 @@ def produce_frames(frame_buffer, video_path):
 
         end_time = time()
 
-        performance_times["convert_image_to_text"] = round(end_time - start_time, DEBUG_ROUND_DIGITS)
-        performance_times["total"] = round(performance_times["convert_image_to_text"] + performance_times["get_image"] + performance_times["prepare_image"], DEBUG_ROUND_DIGITS)
+        if debug:
+            performance_times["convert_image_to_text"] = round(end_time - start_time, DEBUG_ROUND_DIGITS)
+            performance_times["total"] = round(performance_times["convert_image_to_text"] + performance_times["get_image"] + performance_times["prepare_image"], DEBUG_ROUND_DIGITS)
 
         lines_array = defchararray.add(chars, "")
         lines = ["".join(row) + "\n" for row in lines_array]
-        lines.append(f"Buffer Times: {performance_times}")
+
+        if debug:
+            lines.append(f"Buffer Times: {performance_times}")
 
         frame_buffer.put("".join(lines))

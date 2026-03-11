@@ -13,8 +13,9 @@ def main():
     file_found = False
     video_path = None
     speed_scale = 1.0
+    debug = False
 
-    for i in range(len(argv) - 1):
+    for i in range(len(argv)):
         if argv[i] == "--file":
             file_found = True
 
@@ -33,6 +34,8 @@ def main():
 
             if speed_scale <= 0:
                 print("Speed cannot be less than 0. Defaulting to 1.0 speed")
+        elif argv[i] == "--debug":
+            debug = True
     
     if not file_found:
         print("You need to provide a path and the --path argument before it for the video file you want to play.")
@@ -55,8 +58,8 @@ def main():
     frame_buffer: Queue[str] = Queue(maxsize=conf["buffer_size"])
     preload_buffer_amount = conf["pre_load_buffer"]
 
-    producer_thread = Thread(target=produce_frames, args=[frame_buffer, video_path], daemon=True)
-    watch_thread = Thread(target=watch_video, args=[frame_buffer, video_fps, frame_count, preload_buffer_amount, speed_scale], daemon=True)
+    producer_thread = Thread(target=produce_frames, args=[frame_buffer, video_path, debug], daemon=True)
+    watch_thread = Thread(target=watch_video, args=[frame_buffer, video_fps, frame_count, preload_buffer_amount, speed_scale, debug], daemon=True)
     
     try:
         print("\033[?25l")

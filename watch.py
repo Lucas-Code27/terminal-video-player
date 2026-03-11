@@ -4,7 +4,7 @@ from time import sleep, time
 from queue import Queue, Empty
 from re import compile
 
-def watch_video(frame_buffer, video_fps, frame_count, preload_buffer_amount, speed_scale):
+def watch_video(frame_buffer, video_fps, frame_count, preload_buffer_amount, speed_scale, debug):
     adjusted_fps = video_fps * speed_scale
     FRAME_DELAY = 1.0 / adjusted_fps
 
@@ -75,10 +75,11 @@ def watch_video(frame_buffer, video_fps, frame_count, preload_buffer_amount, spe
                 stdout.write("░")
         stdout.write("\n")
 
-        stdout.write("\n")
-        stdout.write(f"Frame render time: {render_time:.6f}" + (" " * 12) + "\n")
-        stdout.write(f"Frame Size: {round(getsizeof(frame)/1000, 3)} kilobytes" + (" " * 12) + "\n")
-        stdout.write(f"Buffer: {frame_buffer.qsize()}/{frame_buffer.maxsize}" + (" " * 12) + "\n")
+        if debug:
+            stdout.write("\n")
+            stdout.write(f"Frame render time: {render_time:.6f}" + (" " * 12) + "\n")
+            stdout.write(f"Frame Size: {round(getsizeof(frame)/1000, 3)} kilobytes" + (" " * 12) + "\n")
+            stdout.write(f"Buffer: {frame_buffer.qsize()}/{frame_buffer.maxsize}" + (" " * 12) + "\n")
 
         stdout.flush()
 
