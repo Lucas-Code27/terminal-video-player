@@ -35,8 +35,6 @@ def produce_frames(frame_buffer, video_path):
 
     char_x = CHAR_SIZE_X * quantization_level
     char_y = CHAR_SIZE_Y * quantization_level
-
-    one = False
     
     while True:
         if image_frame_buffer.full():
