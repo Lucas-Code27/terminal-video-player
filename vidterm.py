@@ -58,13 +58,26 @@ def main():
             print("fps was divided by zero")
             exit(1)
         
+        if video_fps == 0:
+            print("video fps detected as 0 aborting")
+            exit(1)
+
         frame_count = int(stream.get("nb_frames", 0))
 
         if frame_count == 0:
             duration = float(stream.get("duration", 0))
+
+            if duration == 0:
+                print("Video is so short it doesn't exist")
+                exit(1)
+
             frame_count = int(duration * video_fps)
     except ffmpeg.Error:
         print("Failed to load video metadata")
+        exit(1)
+
+    if frame_count == 0:
+        print("Failed to get a proper frame count")
         exit(1)
 
     conf = get_config()
