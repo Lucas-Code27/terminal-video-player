@@ -68,7 +68,7 @@ def main():
             duration = float(stream.get("duration", 0))
 
             if duration == 0:
-                print("Video is so short it doesn't exist")
+                print("Video is so short it doesn't exist (This is sometimes caused by the file format .mp4 is recommended)")
                 exit(1)
 
             frame_count = int(duration * video_fps)
