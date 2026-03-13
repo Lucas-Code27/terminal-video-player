@@ -104,8 +104,8 @@ def produce_frames(frame_buffer, video_path, debug):
         if array_equal(reshaped, last_frame_image):
             frame_buffer.put(last_frame_text)
             continue
-        else:
-            last_frame_image = reshaped
+            
+        last_frame_image = reshaped
 
         half = char_y // 2
 
@@ -168,4 +168,8 @@ def produce_frames(frame_buffer, video_path, debug):
             lines.append(f"Buffer Times: {performance_times}    ")
 
         frame_buffer.put("".join(lines))
+
+        if debug:
+            lines[-1] = f"COPIED FRAME, Frame Fetch Time: {performance_times['get_image']}" + (" " * len(str(performance_times)))
+
         last_frame_text = "".join(lines)
