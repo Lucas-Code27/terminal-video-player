@@ -94,15 +94,10 @@ def produce_frames(frame_buffer, video_path, debug):
         height = file_frame.shape[0]
         width = file_frame.shape[1]
 
-        h2 = (height // char_y) * char_y
-        w2 = (width // char_x) * char_x
+        blocks_y = height // char_y
+        blocks_x = width // char_x
 
-        cropped = file_frame[:h2, :w2]
-
-        blocks_y = h2 // char_y
-        blocks_x = w2 // char_x
-
-        reshaped = cropped.reshape(
+        reshaped = file_frame.reshape(
             blocks_y, char_y,
             blocks_x, char_x,
             3
