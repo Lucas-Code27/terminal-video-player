@@ -15,7 +15,7 @@ def load_config():
     except Exception as e:
         print(f"Config loading had an error! {e}")
 
-        new_config["quantization_level"] = 12
+        new_config["quantization_level"] = 4
         new_config["buffer_size"] = 100
         new_config["pre_load_buffer"] = 20
     

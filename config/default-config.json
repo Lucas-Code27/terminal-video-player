@@ -1,5 +1,5 @@
 {
-    "quantization_level": 12,
+    "quantization_level": 4,
     "buffer_size": 100,
     "pre_load_buffer": 20
 }
