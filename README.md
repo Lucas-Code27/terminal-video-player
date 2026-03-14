@@ -28,4 +28,4 @@
 Optional Arguments:
 - `--speed <int or float value above 0>` Changes the video playback speed
 - `--debug` Displays debug information about renderer and buffer performance
-- `--no-colors` Runs the program using the grayscale render mode
+- `--no-color` Runs the program using the grayscale render mode
