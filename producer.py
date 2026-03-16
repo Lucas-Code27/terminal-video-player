@@ -31,6 +31,7 @@ def frame_generator(path, quant, mode):
             ffmpeg
             .input(path)
             .filter("scale", target_width, target_height)
+            .filter("eq", contrast=0.9)
             .output('pipe:', format='rawvideo', pix_fmt='gray8')
             .run_async(pipe_stdout=True, quiet=True)
         )
@@ -90,26 +91,20 @@ def build_frame(fg, bg, change_mask):
     chars = where(change_mask, defchararray.add(colors, chars), chars)
     return chars
 
-def build_frame_greyscale(width, height, fg, bg):
+def build_frame_greyscale(width, height, fg, bg, character_gradient):
     chars = []
+
+    step_size = 255 // len(character_gradient)
 
     for y in range(height):
         line = []
 
         for x in range(width):
-            i = (fg[y, x, 0] + bg[y, x, 0]) / 2
+            i = (fg[y, x, 0] + bg[y, x, 0]) // 2
+            index = (i // step_size) % len(character_gradient)
 
-            if i > 200:
-                line.append("█")
-            elif i > 150:
-                line.append("▓")
-            elif i > 100:
-                line.append("▒")
-            elif i > 50:
-                line.append("░")
-            else:
-                line.append(" ")
-        
+            line.append(character_gradient[index])
+
         chars.append("".join(line))
     
     return chars
@@ -127,6 +122,8 @@ def produce_frames(frame_buffer, video_path, debug, color_mode):
 
     CHAR_SIZE_X = 1
     CHAR_SIZE_Y = 2
+
+    gs_characters = [" ", ".", ":", "-", "=", "+", "#", "%", "@"]
 
     conf = get_config()
     quantization_level = conf["quantization_level"]
@@ -212,7 +209,7 @@ def produce_frames(frame_buffer, video_path, debug, color_mode):
             start_time = time()
 
         if color_mode == "gs":
-            chars = build_frame_greyscale(blocks_x, blocks_y, fg.astype(int), bg.astype(int))
+            chars = build_frame_greyscale(blocks_x, blocks_y, fg.astype(int), bg.astype(int), gs_characters)
         else:
             chars = build_frame(fg, bg, change_mask)
 
