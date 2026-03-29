@@ -1,3 +1,7 @@
+> [!NOTE]
+> Vidterm is currently undergoing a full rewrite and may return under a new name and in a different repo once it's finished
+> The current repo has been temporarily archived until further notice
+
 # Vidterm
 #### A simple video player for the terminal
 
